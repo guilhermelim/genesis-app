@@ -1,0 +1,89 @@
+#!/bin/sh
+
+set -e
+
+stagedChanges=$(git diff --cached --name-only --diff-filter=ACMRD)
+stagedFiles=$(git diff --cached --name-only --diff-filter=ACMR)
+unstagedFiles=$(git diff --name-only --diff-filter=ACMR)
+untrackedFiles=$(git ls-files --others --exclude-standard)
+stashBefore=$(git rev-parse --verify --quiet refs/stash || true)
+stashCreated=0
+
+restore_stash() {
+  status=$?
+  if [ "$stashCreated" -eq 1 ]; then
+    if ! git stash pop --quiet; then
+      echo "[pre-commit] Could not restore unstaged changes." >&2
+      echo "[pre-commit] The temporary stash was preserved. Run 'git stash list' to recover it." >&2
+      status=1
+    fi
+  fi
+  exit "$status"
+}
+
+interrupt() {
+  signal=$1
+  echo "[pre-commit] Interrupted by $signal. Restoring protected changes before exiting." >&2
+  exit "$2"
+}
+
+trap restore_stash EXIT
+trap 'interrupt SIGINT 130' INT
+trap 'interrupt SIGTERM 143' TERM
+
+if [ -z "$stagedChanges" ]; then
+  echo "[pre-commit] No staged files found. Nothing to validate."
+  exit 0
+fi
+
+echo "[pre-commit] Processing staged files only."
+if [ -n "$unstagedFiles" ]; then
+  if ! git diff --cached --name-only -z --diff-filter=ACMR |
+    xargs -0 git diff --quiet --
+  then
+    echo "[pre-commit] Partially staged files are not supported."
+    echo "[pre-commit] Commit or stash unstaged changes in staged files before continuing."
+    exit 1
+  fi
+fi
+
+if [ -n "$unstagedFiles" ] || [ -n "$untrackedFiles" ]; then
+  echo "[pre-commit] Temporarily stashing unstaged changes..."
+  git stash push --quiet --keep-index --include-untracked -m "pre-commit temporary stash"
+  stashAfter=$(git rev-parse --verify --quiet refs/stash || true)
+  if [ "$stashBefore" != "$stashAfter" ]; then
+    stashCreated=1
+  fi
+fi
+
+echo "[pre-commit] Rendering terminal quality gate..."
+npm run terminal:quality
+
+echo "[pre-commit] Formatting staged files..."
+if [ -n "$stagedFiles" ]; then
+  git diff --cached --name-only -z --diff-filter=ACMR |
+    xargs -0 prettier --write --ignore-unknown --
+fi
+
+echo "[pre-commit] Running ESLint on staged source files..."
+eslintFiles=$(git diff --cached --name-only --diff-filter=ACMR -- '*.js' '*.jsx' '*.ts' '*.tsx')
+if [ -n "$eslintFiles" ]; then
+  git diff --cached --name-only -z --diff-filter=ACMR -- '*.js' '*.jsx' '*.ts' '*.tsx' |
+    xargs -0 eslint --fix --max-warnings=0 --no-warn-ignored --
+fi
+
+echo "[pre-commit] Staging formatter and ESLint fixes..."
+if [ -n "$stagedFiles" ]; then
+  git diff --cached --name-only -z --diff-filter=ACMR | xargs -0 git add --
+fi
+
+echo "[pre-commit] Checking staged path names..."
+npx --no-install tsx ./scripts/path-name-check/index.ts --staged
+
+echo "[pre-commit] Running TypeScript typecheck..."
+npm run test:typecheck
+
+echo "[pre-commit] Running tests related to staged source files..."
+npm run test:staged
+
+echo "[pre-commit] All staged checks passed."

@@ -1,0 +1,17 @@
+services:
+  mongo-test:
+    image: mongo:8.0
+    container_name: genesis-mongo-test
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secret
+      MONGO_INITDB_DATABASE: genesis_test
+    ports:
+      - '27018:27017'
+    tmpfs:
+      - /data/db
+    healthcheck:
+      test: ['CMD-SHELL', 'mongosh --quiet --eval "db.adminCommand({ ping: 1 }).ok" | grep 1']
+      interval: 2s
+      timeout: 5s
+      retries: 20

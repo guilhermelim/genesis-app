@@ -1,0 +1,8 @@
+.agents
+ddd-boilerplate
+AGENTS.md
+
+.vscode
+.gitignore
+next.config.ts
+opencode.json
