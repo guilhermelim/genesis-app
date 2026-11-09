@@ -13,15 +13,7 @@ jest.mock('@/components/layout/page-container', () => ({
 }))
 jest.mock('./_components/home-hero', () => ({
   __esModule: true,
-  default: ({
-    memberCount,
-    photos,
-    pollTitle,
-  }: {
-    memberCount: number
-    photos?: unknown[]
-    pollTitle?: string
-  }) => (
+  default: ({ memberCount, photos, pollTitle }: { memberCount: number; photos?: unknown[]; pollTitle?: string }) => (
     <div data-testid="hero">
       {memberCount}|{pollTitle}|{photos?.length ?? 0}
     </div>

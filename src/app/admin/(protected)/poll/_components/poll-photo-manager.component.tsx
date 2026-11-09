@@ -172,8 +172,8 @@ export default function PollPhotoManager({
           <p className="font-medium">Fotos do evento</p>
           <p className="text-xs text-muted-foreground">{photos.length}/10 fotos</p>
           <p className="mt-1 max-w-xl text-xs text-muted-foreground">
-            A primeira imagem fica em destaque e será usada como capa na listagem de voluntariados. Arraste as fotos para
-            reorganizar a ordem.
+            A primeira imagem fica em destaque e será usada como capa na listagem de voluntariados. Arraste as fotos
+            para reorganizar a ordem.
           </p>
         </div>
         <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
