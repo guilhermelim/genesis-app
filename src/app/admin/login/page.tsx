@@ -10,15 +10,17 @@ import Image from 'next/image'
 export default function AdminLoginPage() {
   return (
     <div className="mx-auto grid w-full max-w-4xl overflow-hidden rounded-2xl border bg-card shadow-xl shadow-primary/5 lg:grid-cols-[1.05fr_0.95fr]">
-      <div className="relative hidden min-h-[560px] overflow-hidden bg-primary p-8 text-primary-foreground lg:flex lg:flex-col lg:justify-between">
-        <Image
-          src="/genesis-banner.png"
-          alt=""
-          fill
-          sizes="(min-width: 1024px) 50vw, 0px"
-          className="object-cover opacity-20"
-          priority
-        />
+      <div className="relative hidden min-h-140 overflow-hidden bg-primary p-8 text-primary-foreground lg:flex lg:flex-col lg:justify-between">
+        <div className="absolute inset-0 flex items-center justify-center opacity-10">
+          <Image
+            src="/genesis-logo.svg"
+            alt="Genesis Servir"
+            width={400}
+            height={351}
+            className="object-contain"
+            priority
+          />
+        </div>
         <div className="relative z-10 flex items-center gap-2 font-semibold">
           <span className="grid size-9 place-items-center rounded-xl bg-white/15">
             <LockKeyhole className="size-4" />
